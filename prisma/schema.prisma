@@ -1,0 +1,223 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model Order {
+  id          String @unique @default(cuid()) @id
+  /// @Validator.MinLength(3)
+  fullName        String
+   /// @FieldType('Scalars.GraphQLEmailAddress')
+  emailAddress String
+  shippingAddress       String
+  postCode      String
+  orderDate   DateTime
+  dipatchBy   DateTime
+  processed   Boolean @default(value: false)
+  postageCost Float
+  totalCost   Float
+  currency    String
+  orderId     Int @unique @default(autoincrement())
+  source      String
+  subSource   String
+  tax         Float
+  country   Country @relation(fields: [countryId], references: [id])
+  countryId  String
+  postalServiceId String
+  referenceNumber String
+  externalReferenceNumber String
+  postalTrackingNumber String
+  createdBy  String?
+  status     Status @default(PENDING)
+  address1   String?
+  address2   String?
+  address3   String?
+  town       String?
+  region     String?
+  phoneNumber     String?
+  company     String?
+   /// @HideField({ match: '*Create*Input' })
+  createdAt   DateTime
+  updatedAt   DateTime
+  orderItems OrderItem[]
+  folders    OrderFolder[]
+  notes      orderNotes[]
+}
+
+enum Status {
+  PENDING
+  PROCESSING
+  COMPLETED
+  CANCELLED
+}
+
+model Country {
+  id          String @unique @default(cuid()) @id
+  name        String
+  code        String
+  phoneCode   String
+  continent   Continent
+  currency    String
+  taxRate     Float?
+  region      CountryRegion[]
+  /// @HideField({ match: '*Create*Input' })
+  createdAt   DateTime
+  updatedAt   DateTime
+  orders      Order[]
+  suppliers   Supplier[]
+}
+
+model CountryRegion {
+  id          String @unique @default(cuid()) @id
+  name        String
+  code        String
+  country     Country @relation(fields: [countryId], references: [id])
+  countryId   String
+  taxRate     Float?
+  /// @HideField({ match: '*Create*Input' })
+  createdAt   DateTime
+  updatedAt   DateTime
+  
+}
+ 
+ enum Continent {
+   AFRICA
+    ASIA
+    EUROPE
+    NORTH_AMERICA
+    OCEANIA
+    SOUTH_AMERICA
+    ANTARCTICA
+ }
+
+model OrderItem {
+  id          String @unique @default(cuid()) @id
+  productId   String
+  productName String
+  quantity    Int
+  price       Float
+  /// @HideField({ match: '*Create*Input' })
+  createdAt   DateTime
+  updatedAt   DateTime
+  order       Order @relation(fields: [orderId], references: [id])
+  orderId     String
+  salesTax    Float
+  taxRate     Float
+  taxCostInclusive Boolean
+  priceIncTax Float
+  lineDiscount Float
+  isService  Boolean
+}
+
+model OrderFolder {
+  id          String @unique @default(cuid()) @id
+  name        String
+  description String
+  /// @HideField({ match: '*Create*Input' })
+  createdAt   DateTime
+  updatedAt   DateTime
+  orders      Order[]
+}
+
+model orderNotes {
+  id          String @unique @default(cuid()) @id
+  order  Order @relation(fields: [orderId], references: [id])
+  orderId     String
+  note        String
+  noteType    String
+  noteDate   DateTime
+  internal    Boolean
+  createdBy   String
+  /// @HideField({ match: '*Create*Input' })
+  createdAt   DateTime
+  updatedAt   DateTime
+}
+
+model Stock {
+  id          String @unique @default(cuid()) @id
+  productId   String
+  productName String
+  quantity    Int
+
+  /// @HideField({ match: '*Create*Input' })
+  createdAt   DateTime
+  updatedAt   DateTime
+}
+
+model StockItem {
+  id          String @unique @default(cuid()) @id
+  description String @db.Text
+  productName String
+  productId   String
+  barcodeNumber   String
+  metaData    String
+  purchasePrice   Float
+  retailPrice    Float
+  taxRate    Float
+  quantity    Int
+  inOrder     Int
+  due         Int
+  minimumLevel Int
+  available   Int
+  height      Float
+  width       Float
+  depth       Float
+  weight      Float
+
+  /// @HideField({ match: '*Create*Input' })
+  createdAt   DateTime
+  updatedAt   DateTime
+  category    Category @relation(fields: [categoryId], references: [id])
+  categoryId  String
+  
+}
+
+model Category {
+  id          String @unique @default(cuid()) @id
+  name        String
+  description String
+  /// @HideField({ match: '*Create*Input' })
+  createdAt   DateTime
+  updatedAt   DateTime
+  stockItems  StockItem[]
+}
+
+enum AvailabilityStatus {
+  AVAILABLE
+  OUT_OF_STOCK
+  BACK_ORDER
+}
+
+ enum LevelType {
+   TRANSFER
+   PURCHASEORDER
+ }
+
+ model Supplier {
+  id          String @unique @default(cuid()) @id
+  name        String
+  description String
+  contactName String
+  address    String
+  alternateAddress    String
+  country    Country @relation(fields: [countryId], references: [id])
+  countryId  String
+  phoneNumber     String
+  secondaryPhoneNumber     String
+  emailAddress String
+  website    String
+  faxNumber  String
+  postCode   String
+  currency    String
+  /// @HideField({ match: '*Create*Input' })
+  createdAt   DateTime
+  updatedAt   DateTime
+ }
